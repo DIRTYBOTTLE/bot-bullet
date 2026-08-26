@@ -10,7 +10,6 @@ def bullet_node(state: State) -> dict[str, list[BaseMessage]]:
         {"type": "image_url", "image_url": {"url": img_base64}}
         for img_base64 in state["screens_base64"]
     ]
-    content = [{"type": "text", "text": "请描述这些图片"}, *image_parts]
-    human_message = HumanMessage(content=content)
+    human_message = HumanMessage(image_parts)
     response = get_model().invoke([*state["messages"], human_message])
     return {"messages": [human_message, response]}
