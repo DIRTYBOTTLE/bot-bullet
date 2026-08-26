@@ -1,7 +1,7 @@
 [project]
 name = "bot-bullet"
 version = "0.1.0"
-description = "Add your description here"
+description = "捕获桌面截图，交给 DeepSeek 视觉模型生成描述"
 readme = "README.md"
 authors = [
     { name = "DirtyBottle", email = "479763003@qq.com" }
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bot-bullet = "bot_bullet:main"
+bot-bullet = "bot_bullet.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]

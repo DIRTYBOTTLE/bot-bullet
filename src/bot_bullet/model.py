@@ -1,9 +1,11 @@
-from dotenv import load_dotenv
+from functools import cache
+
 from langchain.chat_models import init_chat_model
 
-load_dotenv()
 
-model = init_chat_model(
-    model="deepseek-v4-flash-vision-exp",
-    extra_body={"thinking": {"type": "disabled"}},
-)
+@cache
+def get_model():
+    return init_chat_model(
+        model="deepseek-v4-flash-vision-exp",
+        extra_body={"thinking": {"type": "disabled"}},
+    )
