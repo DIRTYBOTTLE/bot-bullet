@@ -22,7 +22,7 @@ import threading
 import time
 
 from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QGuiApplication, QFont
+from PySide6.QtGui import QCursor, QGuiApplication, QFont
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
@@ -95,11 +95,59 @@ class Overlay(QWidget):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)  # 不拦截鼠标点击
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)  # Qt 层不接收鼠标事件
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(CARD_GAP)
         self._card: Card | None = None
+        self._visible = True  # 外部显隐开关（截图时临时隐藏弹幕用）
+        self._hover_timer = QTimer(self)
+        self._hover_timer.setInterval(120)  # 轮询光标：悬停在卡片上就暂时让位
+        self._hover_timer.timeout.connect(self._apply_visible)
+        self._hover_timer.start()
+
+    def set_visible(self, visible: bool) -> None:
+        """外部显隐开关（截图前隐藏弹幕、截完恢复）。"""
+        self._visible = visible
+        self._apply_visible()
+
+    def showEvent(self, event) -> None:  # noqa: N802
+        super().showEvent(event)
+        self._apply_click_through()
+
+    def _apply_visible(self) -> None:
+        """综合三个条件决定窗口显隐：有无卡片、外部开关、鼠标是否悬停。
+
+        鼠标悬停在卡片上时窗口暂时隐藏，把背后的内容让出来，移开后自动
+        恢复。用轮询光标位置实现——原生窗口已设为鼠标穿透，收不到
+        enter/leave 事件。
+        """
+        if self._card is None or not self._visible:
+            self.hide()
+        elif self.geometry().contains(QCursor.pos()):
+            self.hide()  # 鼠标压在卡片上 → 暂时让位，背后内容可见可点
+        else:
+            self.show()
+
+    def _apply_click_through(self) -> None:
+        """让悬浮窗对鼠标完全穿透：点弹幕 = 点它背后的内容。
+
+        只设 ``WA_TransparentForMouseEvents`` 在 macOS 上不够——它只让 Qt 自己
+        忽略事件，原生 NSWindow 仍会吃掉卡片区域的点击，挡住背后软件的按钮。
+        所以每次显示时还要把原生窗口设为 ``ignoresMouseEvents``。
+        """
+        handle = self.windowHandle()
+        if handle is not None:
+            handle.setFlag(Qt.WindowTransparentForInput, True)
+        if QGuiApplication.platformName() != "cocoa":
+            return
+        try:
+            import objc
+
+            view = objc.objc_object(c_void_p=int(self.winId()))
+            view.window().setIgnoresMouseEvents_(True)
+        except Exception:
+            pass  # cocoa 平台下 pyobjc 必在，这里只是兜底
 
     def add_bullet(self, text: str, name: str, price: int) -> None:
         self._clear()  # 先清掉旧的，只保留最新一条
@@ -125,7 +173,7 @@ class Overlay(QWidget):
         screen = QGuiApplication.primaryScreen().geometry()
         y = screen.bottom() - BOTTOM_OFFSET - total_h
         self.setGeometry(MARGIN, y, CARD_W, total_h)
-        self.show()
+        self._apply_visible()
 
     def tick(self) -> None:
         """到期的卡片自动消失。"""
@@ -205,7 +253,7 @@ def main() -> int:
             if msg.get("type") == "bullet":
                 window.add_bullet(msg["text"], msg["name"], msg["price"])
             elif msg.get("type") == "visible":
-                window.setVisible(bool(msg.get("visible", True)))
+                window.set_visible(bool(msg.get("visible", True)))
 
     poller = QTimer()
     poller.timeout.connect(drain)
