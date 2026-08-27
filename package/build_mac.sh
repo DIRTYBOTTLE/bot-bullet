@@ -22,7 +22,11 @@ DMG_PATH="release/$APP_NAME-$VERSION.dmg"
 rm -rf "$APP_PATH" "$DMG_PATH" "$BUILD_DIR" package/bot-bullet.spec
 
 echo "==> 生成应用图标 icns"
-PYTHON_BIN="$(command -v python || command -v python3)"
+# 图标生成用项目虚拟环境 (.venv) 的 python——系统 python 可能没装 PySide6
+PYTHON_BIN="${PROJECT_ROOT}/.venv/bin/python"
+if [ ! -x "$PYTHON_BIN" ]; then
+  PYTHON_BIN="$(command -v python || command -v python3)"
+fi
 "${PYTHON_BIN}" - <<'PYEOF'
 import os
 from PySide6.QtCore import Qt
