@@ -104,6 +104,17 @@ def _send(payload: dict) -> None:
             pass
 
 
+def _server_command() -> list[str]:
+    """构造弹幕服务器子进程的启动命令。
+
+    PyInstaller 打包后 ``-m`` 方式不可用，改为向自身可执行文件传参、
+    由入口处路由到 overlay_server。
+    """
+    if getattr(sys, "frozen", False):
+        return [sys.executable, "--overlay-server"]
+    return [sys.executable, "-u", "-m", "bot_bullet.tools.overlay_server"]
+
+
 def _ensure_proc(force: bool = False) -> bool:
     """确保 overlay_server 子进程存在并存活；返回是否可用。"""
     global _proc, _shutdown_registered
@@ -116,7 +127,7 @@ def _ensure_proc(force: bool = False) -> bool:
         except OSError:
             pass
     _proc = subprocess.Popen(
-        [sys.executable, "-u", "-m", "bot_bullet.tools.overlay_server"],
+        _server_command(),
         stdin=subprocess.PIPE,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,

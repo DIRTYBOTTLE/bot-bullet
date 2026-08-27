@@ -221,6 +221,12 @@ _LOCK_FILE = None
 
 
 def main() -> None:
+    # 打包模式下：带 --overlay-server 参数启动的是弹幕子进程，路由后直接返回
+    if "--overlay-server" in sys.argv:
+        from bot_bullet.tools.overlay_server import main as server_main
+
+        return server_main()
+
     if not _acquire_single_instance():
         # 已有一个实例在跑，直接退出，避免出现两个图标
         print("[bot-bullet] 已在运行，请使用已存在的实例。", flush=True)
