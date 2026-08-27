@@ -17,7 +17,7 @@
 
 ## 1. 安装
 
-安装包是 `release/bot-bullet.dmg`。双击打开后，把 **bot-bullet** 拖入 Applications 文件夹，然后从启动台或 Spotlight 启动 bot-bullet。
+安装包在 **GitHub Releases** 页面下载（`.dmg` 文件）。到 [Releases](https://github.com/DIRTYBOTTLE/bot-bullet/releases) 下载安装包后：双击打开，把 **bot-bullet** 拖入 Applications 文件夹，然后从启动台或 Spotlight 启动 bot-bullet。
 
 首次启动如果 macOS 提示无法验证开发者：在弹窗里点「打开」即可。
 首次截屏时系统会请求「屏幕录制」权限，**必须允许**，否则截屏全黑、弹幕无内容。
