@@ -89,7 +89,7 @@ class Card(QWidget):
 
 
 class Overlay(QWidget):
-    """容纳所有卡片、锚定左下角、随卡片数量自动向上生长的悬浮窗。"""
+    """容纳弹幕卡片、锚定左下角。永远只显示最新一条，新的来了替换旧的。"""
 
     def __init__(self) -> None:
         super().__init__()
@@ -99,32 +99,38 @@ class Overlay(QWidget):
         self._layout = QVBoxLayout(self)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._layout.setSpacing(CARD_GAP)
-        self._cards: list[Card] = []
+        self._card: Card | None = None
 
     def add_bullet(self, text: str, name: str, price: int) -> None:
+        self._clear()  # 先清掉旧的，只保留最新一条
         ts = time.strftime("%Y-%m-%d %H:%M:%S")
         card = Card(text, name, price, ts)
-        self._cards.append(card)
-        self._layout.addWidget(card)  # 新卡片在最下面，窗口整体向上增长
+        self._card = card
+        self._layout.addWidget(card)
         self._relayout()
 
+    def _clear(self) -> None:
+        """移除当前卡片。"""
+        if self._card is not None:
+            self._layout.removeWidget(self._card)
+            self._card.deleteLater()
+            self._card = None
+
     def _relayout(self) -> None:
-        # 显式按每张卡片在固定宽度下的真实高度累加，避免 word-wrap 高度被低估导致裁剪
-        gap = CARD_GAP * max(0, len(self._cards) - 1)
-        total_h = sum(_card_height(c) for c in self._cards) + gap
+        if self._card is None:
+            self.hide()  # 没有卡片时整个窗口隐藏
+            return
+        total_h = _card_height(self._card)
         screen = QGuiApplication.primaryScreen().geometry()
-        # 卡片堆放在屏幕底部、往上 BOTTOM_OFFSET 处；新卡片加入时整体向上增长
         y = screen.bottom() - BOTTOM_OFFSET - total_h
         self.setGeometry(MARGIN, y, CARD_W, total_h)
+        self.show()
 
     def tick(self) -> None:
-        """清理到期的卡片。"""
-        now = time.monotonic()
-        for card in list(self._cards):
-            if card.deadline <= now:
-                self._cards.remove(card)
-                card.deleteLater()
-                self._relayout()
+        """到期的卡片自动消失。"""
+        if self._card is not None and self._card.deadline <= time.monotonic():
+            self._clear()
+            self._relayout()
 
 
 def _card_height(card: Card) -> int:
