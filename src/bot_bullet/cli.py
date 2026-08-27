@@ -1,10 +1,12 @@
 import time
+import traceback
 
 from dotenv import load_dotenv
 from langchain.messages import SystemMessage
 from langchain_core.runnables.config import RunnableConfig
 
 from bot_bullet.graph import app
+from bot_bullet.tools.overlay import show_bullet
 
 
 def main() -> None:
@@ -13,23 +15,23 @@ def main() -> None:
     first = True
     while True:
         try:
-            for message in app.stream_events(
+            state = app.invoke(
                 {
                     "messages": [
                         SystemMessage(
                             "你是资深弹幕评论员。根据屏幕内容生成简短、有趣、贴合画面的一条弹幕"
                         )
-                    ] if first else []
+                    ]
+                    if first
+                    else []
                 },
                 config,
-                version="v3",
-            ).messages:
-                print()
-                for token in message.text:
-                    print(str(token), end="", flush=True)
-        except Exception:
+            )
+            show_bullet(state["messages"][-1].text)
+        except Exception as e:
+            print(f"[{type(e).__name__}] {e}", flush=True)  # 一行摘要
+            traceback.print_exc()                    # 完整堆栈
             continue
         finally:
             first = False
             time.sleep(15)
-
