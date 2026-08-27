@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['entry_mac.py'],
+    ['/Users/zhangzhenping/Documents/codes/bot-bullet/package/entry_mac.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['assets/bot-bullet.icns'],
+    icon=['/Users/zhangzhenping/Documents/codes/bot-bullet/package/assets/bot-bullet.icns'],
 )
 coll = COLLECT(
     exe,
@@ -46,6 +46,6 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='bot-bullet.app',
-    icon='assets/bot-bullet.icns',
+    icon='/Users/zhangzhenping/Documents/codes/bot-bullet/package/assets/bot-bullet.icns',
     bundle_identifier='com.dirtybottle.bot-bullet',
 )
