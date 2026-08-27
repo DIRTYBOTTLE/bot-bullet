@@ -14,10 +14,12 @@ dependencies = [
     "pyobjc-framework-cocoa>=12.2.2",
     "pyside6>=6.11.2",
     "python-dotenv>=1.2.3",
+    "rumps>=0.4.0",
 ]
 
 [project.scripts]
 bot-bullet = "bot_bullet.cli:main"
+bot-bullet-tray = "bot_bullet.tray:main"
 
 [build-system]
 requires = ["uv_build>=0.12.0,<0.13.0"]

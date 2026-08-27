@@ -113,6 +113,7 @@ class Overlay(QWidget):
         """移除当前卡片。"""
         if self._card is not None:
             self._layout.removeWidget(self._card)
+            self._card.hide()  # 立即隐藏，避免旧卡片在删除前残留显示
             self._card.deleteLater()
             self._card = None
 
@@ -193,6 +194,8 @@ def main() -> int:
                 queue.put(json.loads(line))
             except json.JSONDecodeError:
                 pass
+        # 父进程 stdin 关闭（父进程退出）→ 退出 Qt 事件循环，避免弹窗残留
+        app.quit()
 
     threading.Thread(target=reader, daemon=True).start()
 
