@@ -2,15 +2,22 @@
 # 一键打包：生成可安装的 bot-bullet.dmg（拖拽安装）
 # 用法: ./build_mac.sh     （在任意目录执行均可）
 #
-# 唯一产物: release/bot-bullet.dmg
+# 唯一产物: release/bot-bullet-<版本>.dmg
 set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 APP_NAME="bot-bullet"
 APP_PATH="release/$APP_NAME.app"
-DMG_PATH="release/$APP_NAME.dmg"
 BUILD_DIR="package/build"
+
+# 版本号以 pyproject.toml 为唯一来源，打包时写进 .app 并带到 dmg 文件名
+VERSION="$(grep -m1 '^version' pyproject.toml | sed 's/.*= *"\(.*\)"/\1/')"
+if [ -z "$VERSION" ]; then
+  echo "错误: 无法从 pyproject.toml 读取版本号" >&2
+  exit 1
+fi
+DMG_PATH="release/$APP_NAME-$VERSION.dmg"
 
 rm -rf "$APP_PATH" "$DMG_PATH" "$BUILD_DIR" package/bot-bullet.spec
 
@@ -66,6 +73,10 @@ uv run pyinstaller \
 
 echo "==> 设置菜单栏常驻 (LSUIElement，不占 Dock)"
 plutil -replace LSUIElement -bool true "$APP_PATH/Contents/Info.plist"
+
+echo "==> 写入版本号 v$VERSION"
+plutil -replace CFBundleShortVersionString -string "$VERSION" "$APP_PATH/Contents/Info.plist"
+plutil -replace CFBundleVersion           -string "$VERSION" "$APP_PATH/Contents/Info.plist"
 
 echo "==> 制作 DMG 安装镜像"
 DMG_STAGE="$BUILD_DIR/dmg"
