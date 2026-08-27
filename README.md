@@ -49,4 +49,4 @@ uv run bot-bullet           # 无界面的命令行模式（调试用）
 ./package/build_mac.sh
 ```
 
-脚本会依次完成图标生成、PyInstaller 打包、设置菜单栏常驻，最终产出唯一的安装文件 `release/bot-bullet.dmg`。打包相关的一切脚本都在 `package/` 目录下。
+脚本会依次完成图标生成、PyInstaller 打包、设置菜单栏常驻与版本号写入，最终产出唯一的安装文件 `release/bot-bullet-<版本号>.dmg`（版本号取自 `pyproject.toml`）。打包相关的一切脚本都在 `package/` 目录下。
